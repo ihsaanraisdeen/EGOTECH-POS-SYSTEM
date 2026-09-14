@@ -19,8 +19,9 @@ if (!isset($_SESSION['user'])) {
  | <button onclick="logout()">Logout</button></p>  <input id="search" placeholder="Search product or scan barcode" autofocus>
   <div id="searchResults"></div>
 
-  <h2>Cart</h2>
-  <table border="1" id="cartTable">
+<div id="lowStockAlert" style="background:#fff3cd; padding:10px; margin-bottom:10px;"></div>
+
+<h2>Cart</h2>  <table border="1" id="cartTable">
     <thead>
       <tr><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th><th></th></tr>
     </thead>
@@ -37,6 +38,21 @@ if (!isset($_SESSION['user'])) {
 
   <script>
     let cart = [];
+    function loadLowStock() {
+  fetch('api/low_stock.php')
+    .then(res => res.json())
+    .then(items => {
+      const el = document.getElementById('lowStockAlert');
+      if (items.length === 0) {
+        el.innerHTML = '';
+        return;
+      }
+      el.innerHTML = '<strong>⚠ Low Stock:</strong> ' +
+        items.map(i => `${i.name} (${i.stock_qty} left)`).join(', ');
+    });
+}
+
+loadLowStock();
 
     document.getElementById('search').addEventListener('input', function() {
       const q = this.value;

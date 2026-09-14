@@ -1,3 +1,4 @@
 <?php
-echo "Hello, POS System!";
+require 'config/db.php';
+echo "Connected to database successfully!";
 ?>

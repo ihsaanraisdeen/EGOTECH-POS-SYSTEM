@@ -68,7 +68,7 @@ if (!isset($_SESSION['user'])) {
       });
     }
 
-    loadProducts();
-  </script>
+loadProducts();
+setInterval(loadProducts, 5000);  </script>
 </body>
 </html>

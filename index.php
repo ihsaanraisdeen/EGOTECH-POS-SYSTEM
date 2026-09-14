@@ -53,7 +53,7 @@ if (!isset($_SESSION['user'])) {
 }
 
 loadLowStock();
-
+setInterval(loadLowStock, 5000);
     document.getElementById('search').addEventListener('input', function() {
       const q = this.value;
       if (q.length < 1) {

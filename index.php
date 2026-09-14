@@ -12,8 +12,7 @@ if (!isset($_SESSION['user'])) {
 </head>
 <body>
   <h1>EGOTECHWORLD POS</h1>
-  <p>Cashier: <?php echo $_SESSION['user']['name']; ?> | <a href="products.php">Manage Products</a> | <button onclick="logout()">Logout</button></p>
-
+<p>Cashier: <?php echo $_SESSION['user']['name']; ?> | <a href="products.php">Manage Products</a> | <a href="reports.php">Reports</a> | <button onclick="logout()">Logout</button></p>
   <input id="search" placeholder="Search product or scan barcode" autofocus>
   <div id="searchResults"></div>
 

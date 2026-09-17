@@ -11,12 +11,14 @@ $data = json_decode(file_get_contents('php://input'), true);
 $cart = $data['cart'];
 $payment_method = $data['payment_method'];
 $paid_amount = $data['paid_amount'] ?? null;
+$discount_amount = $data['discount_amount'] ?? 0;
 $cashier_id = $_SESSION['user']['id'];
 
-$total = 0;
+$subtotal = 0;
 foreach ($cart as $item) {
-    $total += $item['quantity'] * $item['unit_price'];
+    $subtotal += $item['quantity'] * $item['unit_price'];
 }
+$total = max(0, $subtotal - $discount_amount);
 
 try {
     $pdo->beginTransaction();
@@ -38,8 +40,8 @@ try {
         }
     }
 
-    $stmt = $pdo->prepare("INSERT INTO sales (cashier_id, total_amount, payment_method, paid_amount) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$cashier_id, $total, $payment_method, $paid_amount]);
+    $stmt = $pdo->prepare("INSERT INTO sales (cashier_id, total_amount, payment_method, paid_amount, discount_amount) VALUES (?, ?, ?, ?, ?)");
+$stmt->execute([$cashier_id, $total, $payment_method, $paid_amount, $discount_amount]);
     $sale_id = $pdo->lastInsertId();
 
     foreach ($cart as $item) {

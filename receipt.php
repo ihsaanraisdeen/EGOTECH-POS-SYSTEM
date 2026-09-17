@@ -47,37 +47,65 @@ if (!isset($_SESSION['user'])) {
         const items = data.items;
 
         let itemsHtml = items.map(i => `
-          <tr>
-            <td>${i.product_name} x${i.quantity}</td>
-            <td class="right">Rs.${parseFloat(i.subtotal).toFixed(2)}</td>
-          </tr>
-        `).join('');
+  <tr>
+    <td>${i.product_name}<br><small>${i.quantity} x Rs.${parseFloat(i.unit_price).toFixed(2)}</small></td>
+    <td class="right">Rs.${parseFloat(i.subtotal).toFixed(2)}</td>
+  </tr>
+`).join('');
 
-        document.getElementById('receiptContent').innerHTML = `
-          <div class="center">
-            <strong>EGOTECHWORLD (PVT) LTD</strong><br>
-            Point of Sale Receipt
-          </div>
-          <div class="line"></div>
-          Sale #${sale.id}<br>
-          Date: ${sale.created_at}<br>
-          Cashier: ${sale.cashier_name}<br>
-          <div class="line"></div>
-          <table>${itemsHtml}</table>
-          <div class="line"></div>
-          <table>
-            <tr>
-              <td><strong>TOTAL</strong></td>
-              <td class="right"><strong>Rs.${parseFloat(sale.total_amount).toFixed(2)}</strong></td>
-            </tr>
-            <tr>
-              <td>Payment</td>
-              <td class="right">${sale.payment_method.toUpperCase()}</td>
-            </tr>
-          </table>
-          <div class="line"></div>
-          <div class="center">Thank you for your purchase!</div>
-        `;
+        const receiptNo = 'POS-' + String(sale.id).padStart(6, '0');
+
+let paymentRows = `
+  <tr>
+    <td>Payment</td>
+    <td class="right">${sale.payment_method.toUpperCase()}</td>
+  </tr>
+`;
+
+if (sale.payment_method === 'cash' && sale.paid_amount !== null) {
+  const change = parseFloat(sale.paid_amount) - parseFloat(sale.total_amount);
+  paymentRows += `
+    <tr>
+      <td>Cash Received</td>
+      <td class="right">Rs.${parseFloat(sale.paid_amount).toFixed(2)}</td>
+    </tr>
+   <tr>
+  <td><strong>Balance</strong></td>
+  <td class="right"><strong>Rs.${change.toFixed(2)}</strong></td>
+</tr>
+  `;
+}
+
+document.getElementById('receiptContent').innerHTML = `
+  <div class="center">
+    <strong>ISHEEMS FOOD CITY</strong><br>
+    Main Street, Madawakkulam, Andigama<br>
+    Tel: 078-4775289<br>
+    Point of Sale Receipt
+  </div>
+  <div class="line"></div>
+  Receipt No: ${receiptNo}<br>
+  Date: ${sale.created_at}<br>
+  Cashier: ${sale.cashier_name}<br>
+  <div class="line"></div>
+  <table>${itemsHtml}</table>
+  <div class="line"></div>
+  <table>
+  ${sale.discount_amount > 0 ? `
+    <tr>
+      <td>Discount</td>
+      <td class="right">- Rs.${parseFloat(sale.discount_amount).toFixed(2)}</td>
+    </tr>
+  ` : ''}
+  <tr>
+    <td><strong>TOTAL</strong></td>
+    <td class="right"><strong>Rs.${parseFloat(sale.total_amount).toFixed(2)}</strong></td>
+  </tr>
+  ${paymentRows}
+</table>
+  <div class="line"></div>
+  <div class="center">Thank you for shopping with us!<br>Goods once sold are not returnable.</div>
+`;
       });
   </script>
 </body>

@@ -40,8 +40,17 @@ if (!isset($_SESSION['user'])) {
       </thead>
       <tbody id="cartBody"></tbody>
     </table>
-    <h3>Total: Rs. <span id="cartTotal">0.00</span></h3>
+<h3>Subtotal: Rs. <span id="cartSubtotal">0.00</span></h3>
 
+<div>
+<select id="discountType" onchange="renderCart()">
+      <option value="fixed">Rs. (fixed)</option>
+    <option value="percent">% (percentage)</option>
+  </select>
+  <input id="discountValue" type="number" step="0.01" placeholder="Discount" value="0" oninput="renderCart()" style="width:100px;">
+</div>
+
+<h3>Total: Rs. <span id="cartTotal">0.00</span></h3>
    <select id="paymentMethod" onchange="togglePaidField()">
   <option value="cash">Cash</option>
   <option value="card">Card</option>
@@ -107,19 +116,35 @@ if (!isset($_SESSION['user'])) {
       renderCart();
     }
 
-    function renderCart() {
-      document.getElementById('cartBody').innerHTML = cart.map((item, i) => `
-        <tr>
-          <td>${item.name}</td>
-<td><input type="number" value="${item.quantity}" min="1" onchange="updateQty(${i}, this.value)" style="width:70px;"></td>          <td>Rs.${item.unit_price}</td>
-          <td>Rs.${(item.unit_price * item.quantity).toFixed(2)}</td>
-          <td><button onclick="removeItem(${i})">X</button></td>
-        </tr>
-      `).join('');
+   function getDiscountAmount(subtotal) {
+  const type = document.getElementById('discountType').value;
+  const value = parseFloat(document.getElementById('discountValue').value) || 0;
+  if (type === 'percent') {
+    return subtotal * (value / 100);
+  }
+  return value;
+}
 
-      const total = cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
-      document.getElementById('cartTotal').textContent = total.toFixed(2);
-    }
+function renderCart() {
+  document.getElementById('cartBody').innerHTML = cart.map((item, i) => `
+    <tr>
+      <td>${item.name}</td>
+      <td><input type="number" value="${item.quantity}" min="1" onchange="updateQty(${i}, this.value)" style="width:70px;"></td>
+      <td>Rs.${item.unit_price}</td>
+      <td>Rs.${(item.unit_price * item.quantity).toFixed(2)}</td>
+      <td><button onclick="removeItem(${i})">X</button></td>
+    </tr>
+  `).join('');
+
+  const subtotal = cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+  const discount = getDiscountAmount(subtotal);
+  const total = Math.max(0, subtotal - discount);
+
+  document.getElementById('cartSubtotal').textContent = subtotal.toFixed(2);
+  document.getElementById('cartTotal').textContent = total.toFixed(2);
+
+  calculateChange();
+}
 
     function updateQty(index, qty) {
       cart[index].quantity = parseInt(qty);
@@ -165,12 +190,13 @@ function calculateChange() {
       return alert('Amount received is less than the total.');
     }
   }
+    const subtotal = parseFloat(document.getElementById('cartSubtotal').textContent) || 0;
+  const discount_amount = subtotal - total;
 
      fetch('api/sale_create.php', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ cart, payment_method, paid_amount })
-})
+body: JSON.stringify({ cart, payment_method, paid_amount, discount_amount })})
       .then(res => res.json())
       .then(data => {
        if (data.success) {

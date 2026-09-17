@@ -32,44 +32,46 @@ if (!isset($_SESSION['user'])) {
       <input id="search" placeholder="Search product or scan barcode" autofocus style="width:100%;">
       <div id="searchResults" style="margin-top:8px;"></div>
     </div>
-  <div id="searchResults"></div>
 
-<div id="lowStockAlert" style="background:#fff3cd; padding:10px; margin-bottom:10px;"></div>
+    <h2>Cart</h2>
+    <table border="1" id="cartTable">
+      <thead>
+        <tr><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th><th></th></tr>
+      </thead>
+      <tbody id="cartBody"></tbody>
+    </table>
+    <h3>Total: Rs. <span id="cartTotal">0.00</span></h3>
 
-<h2>Cart</h2>  <table border="1" id="cartTable">
-    <thead>
-      <tr><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th><th></th></tr>
-    </thead>
-    <tbody id="cartBody"></tbody>
-  </table>
-  <h3>Total: Rs. <span id="cartTotal">0.00</span></h3>
-
-  <select id="paymentMethod">
-    <option value="cash">Cash</option>
-    <option value="card">Card</option>
-  </select>
-  <button onclick="checkout()">Checkout</button>
-  <p id="checkoutResult"></p>
-
+    <select id="paymentMethod">
+      <option value="cash">Cash</option>
+      <option value="card">Card</option>
+    </select>
+    <button onclick="checkout()">Checkout</button>
+    <p id="checkoutResult"></p>
   </div>
 
-  <script>    let cart = [];
-    function loadLowStock() {
-  fetch('api/low_stock.php')
-    .then(res => res.json())
-    .then(items => {
-      const el = document.getElementById('lowStockAlert');
-      if (items.length === 0) {
-        el.innerHTML = '';
-        return;
-      }
-      el.innerHTML = '<strong>⚠ Low Stock:</strong> ' +
-        items.map(i => `${i.name} (${i.stock_qty} left)`).join(', ');
-    });
-}
+  <footer>EGOTECHWORLD POS v1.0 &nbsp;|&nbsp; © 2026 <strong>EGOTECHWORLD (PVT) LTD</strong></footer>
 
-loadLowStock();
-setInterval(loadLowStock, 5000);
+  <script>
+    let cart = [];
+
+    function loadLowStock() {
+      fetch('api/low_stock.php')
+        .then(res => res.json())
+        .then(items => {
+          const el = document.getElementById('lowStockAlert');
+          if (items.length === 0) {
+            el.innerHTML = '';
+            return;
+          }
+          el.innerHTML = '<strong>⚠ Low Stock:</strong> ' +
+            items.map(i => `${i.name} (${i.stock_qty} left)`).join(', ');
+        });
+    }
+
+    loadLowStock();
+    setInterval(loadLowStock, 5000);
+
     document.getElementById('search').addEventListener('input', function() {
       const q = this.value;
       if (q.length < 1) {
@@ -150,6 +152,7 @@ setInterval(loadLowStock, 5000);
       fetch('api/logout.php', { method: 'POST' })
         .then(() => window.location.href = 'login.php');
     }
+    <footer>EGOTECHWORLD POS v1.0 &nbsp;|&nbsp; © 2026 <strong>EGOTECHWORLD (PVT) LTD</strong></footer>
   </script>
 </body>
 </html>

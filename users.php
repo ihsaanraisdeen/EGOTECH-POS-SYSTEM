@@ -38,7 +38,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
     <h2>Users List</h2>
     <div id="usersList"></div>
-
+<footer>EGOTECHWORLD POS v1.0 &nbsp;|&nbsp; © 2026 <strong>EGOTECHWORLD (PVT) LTD</strong></footer>
   <script>
     function loadUsers() {
       fetch('api/users_get.php')

@@ -20,7 +20,7 @@
       <p id="error" style="color:#c0392b; margin-top:10px;"></p>
     </div>
   </div>
-
+<footer>EGOTECHWORLD POS v1.0 &nbsp;|&nbsp; © 2026 <strong>EGOTECHWORLD (PVT) LTD</strong></footer>
   <script>
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault(); // stop the form from reloading the page
@@ -41,6 +41,7 @@
         }
       });
     });
+    
   </script>
 </body>
 </html>

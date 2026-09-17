@@ -37,7 +37,7 @@ if (!isset($_SESSION['user'])) {
     <h2>Product List</h2>
     <div id="productList"></div>
   </div>
-
+<footer>EGOTECHWORLD POS v1.0 &nbsp;|&nbsp; © 2026 <strong>EGOTECHWORLD (PVT) LTD</strong></footer>
   <script>    let editingId = null;
 
 function loadProducts() {
@@ -59,14 +59,18 @@ function loadProducts() {
             </div>
           `;
         }
-        return `
-          <div>
-            <strong>${p.name}</strong> —
-            Price: Rs.${p.price} | Stock: ${p.stock_qty} | Barcode: ${p.barcode || '-'}
-            <button onclick="startEdit(${p.id})">Edit</button>
-            <button onclick="deleteProduct(${p.id})">Delete</button>
-          </div>
-        `;
+       return `
+  <div class="product-row">
+    <div>
+      <strong>${p.name}</strong> —
+      Price: Rs.${p.price} | Stock: ${p.stock_qty} | Barcode: ${p.barcode || '-'}
+    </div>
+    <div class="actions">
+      <button onclick="startEdit(${p.id})">Edit</button>
+      <button onclick="deleteProduct(${p.id})">Delete</button>
+    </div>
+  </div>
+`;
       }).join('');
     });
 }
@@ -149,6 +153,7 @@ function deleteProduct(id) {
     }
 
 loadProducts();
-setInterval(loadProducts, 5000);  </script>
+setInterval(loadProducts, 5000); 
+ </script>
 </body>
 </html>

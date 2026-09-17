@@ -96,6 +96,28 @@ button:hover { background: #0c7d60; }
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   border-left: 3px solid #0f9d78;
 }
+.product-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border-left: 3px solid #0f9d78;
+}
+
+.product-row .actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.product-row .actions button {
+  padding: 8px 16px;
+  font-size: 13px;
+}
 
 table {
   width: 100%;
@@ -145,4 +167,18 @@ table th {
 #searchResults div:hover {
   background: #f0faf6 !important;
   border-color: #0f9d78 !important;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 40px;
+  color: #8a8577;
+  font-size: 12px;
+  border-top: 1px solid #e0dccf;
+}
+
+footer strong {
+  color: #0f9d78;
+  font-weight: 700;
 }

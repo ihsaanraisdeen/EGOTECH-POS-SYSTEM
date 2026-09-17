@@ -35,7 +35,7 @@ if (!isset($_SESSION['user'])) {
 
     <h2>Transactions</h2>
     <div id="salesList"></div>
-
+<footer>EGOTECHWORLD POS v1.0 &nbsp;|&nbsp; © 2026 <strong>EGOTECHWORLD (PVT) LTD</strong></footer>
   <script>
     document.getElementById('reportDate').valueAsDate = new Date();
 

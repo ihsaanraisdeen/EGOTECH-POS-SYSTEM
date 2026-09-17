@@ -42,12 +42,18 @@ if (!isset($_SESSION['user'])) {
     </table>
     <h3>Total: Rs. <span id="cartTotal">0.00</span></h3>
 
-    <select id="paymentMethod">
-      <option value="cash">Cash</option>
-      <option value="card">Card</option>
-    </select>
-    <button onclick="checkout()">Checkout</button>
-    <p id="checkoutResult"></p>
+   <select id="paymentMethod" onchange="togglePaidField()">
+  <option value="cash">Cash</option>
+  <option value="card">Card</option>
+</select>
+
+<span id="paidFieldWrapper">
+  <input id="paidAmount" type="number" step="0.01" placeholder="Amount received" oninput="calculateChange()">
+  <span id="changeDisplay" style="font-weight:600;"></span>
+</span>
+
+<button onclick="checkout()">Checkout</button>
+<p id="checkoutResult"></p>
   </div>
 
   <footer>EGOTECHWORLD POS v1.0 &nbsp;|&nbsp; © 2026 <strong>EGOTECHWORLD (PVT) LTD</strong></footer>
@@ -105,8 +111,7 @@ if (!isset($_SESSION['user'])) {
       document.getElementById('cartBody').innerHTML = cart.map((item, i) => `
         <tr>
           <td>${item.name}</td>
-          <td><input type="number" value="${item.quantity}" min="1" onchange="updateQty(${i}, this.value)" style="width:50px;"></td>
-          <td>Rs.${item.unit_price}</td>
+<td><input type="number" value="${item.quantity}" min="1" onchange="updateQty(${i}, this.value)" style="width:70px;"></td>          <td>Rs.${item.unit_price}</td>
           <td>Rs.${(item.unit_price * item.quantity).toFixed(2)}</td>
           <td><button onclick="removeItem(${i})">X</button></td>
         </tr>
@@ -125,24 +130,55 @@ if (!isset($_SESSION['user'])) {
       cart.splice(index, 1);
       renderCart();
     }
+function togglePaidField() {
+  const method = document.getElementById('paymentMethod').value;
+  document.getElementById('paidFieldWrapper').style.display = (method === 'cash') ? 'inline' : 'none';
+  document.getElementById('changeDisplay').textContent = '';
+}
 
+function calculateChange() {
+  const total = parseFloat(document.getElementById('cartTotal').textContent) || 0;
+  const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
+  const change = paid - total;
+
+  const el = document.getElementById('changeDisplay');
+  if (paid === 0) {
+    el.textContent = '';
+  } else if (change < 0) {
+    el.textContent = `Short by Rs.${Math.abs(change).toFixed(2)}`;
+    el.style.color = '#c0392b';
+  } else {
+    el.textContent = `Change: Rs.${change.toFixed(2)}`;
+    el.style.color = '#0f9d78';
+  }
+}
     function checkout() {
-      if (cart.length === 0) return alert('Cart is empty');
+  if (cart.length === 0) return alert('Cart is empty');
 
-      const payment_method = document.getElementById('paymentMethod').value;
+  const payment_method = document.getElementById('paymentMethod').value;
+  const total = parseFloat(document.getElementById('cartTotal').textContent) || 0;
+  let paid_amount = null;
 
-      fetch('api/sale_create.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cart, payment_method })
-      })
+  if (payment_method === 'cash') {
+    paid_amount = parseFloat(document.getElementById('paidAmount').value) || 0;
+    if (paid_amount < total) {
+      return alert('Amount received is less than the total.');
+    }
+  }
+
+     fetch('api/sale_create.php', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ cart, payment_method, paid_amount })
+})
       .then(res => res.json())
       .then(data => {
-        if (data.success) {
-          document.getElementById('checkoutResult').textContent = `Sale #${data.sale_id} completed! Total: Rs.${data.total}`;
-          cart = [];
-          renderCart();
-        } else {
+       if (data.success) {
+  document.getElementById('checkoutResult').innerHTML =
+    `Sale #${data.sale_id} completed! Total: Rs.${data.total} — <a href="receipt.php?sale_id=${data.sale_id}" target="_blank">View Receipt</a>`;
+  cart = [];
+  renderCart();
+} else {
           alert('Error: ' + data.error);
         }
       });
@@ -152,7 +188,7 @@ if (!isset($_SESSION['user'])) {
       fetch('api/logout.php', { method: 'POST' })
         .then(() => window.location.href = 'login.php');
     }
-    <footer>EGOTECHWORLD POS v1.0 &nbsp;|&nbsp; © 2026 <strong>EGOTECHWORLD (PVT) LTD</strong></footer>
+    
   </script>
 </body>
 </html>

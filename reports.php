@@ -9,23 +9,32 @@ if (!isset($_SESSION['user'])) {
 <html>
 <head>
   <title>Reports - EGOTECHWORLD POS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>Sales Reports</h1>
-  <a href="index.php">Back to POS</a>
+  <nav>
+    <strong>EGOTECHWORLD POS</strong>
+    <a href="index.php">Back to POS</a>
+  </nav>
 
-  <br><br>
-  <input type="date" id="reportDate">
-  <button onclick="loadReport()">Load Report</button>
+  <div class="container">
+    <h1>Sales Reports</h1>
 
-  <h2>Summary</h2>
-  <p id="summary"></p>
+    <div class="card">
+      <input type="date" id="reportDate">
+      <button onclick="loadReport()">Load Report</button>
+    </div>
 
-  <h2>Best Sellers</h2>
-  <div id="bestSellers"></div>
+    <h2>Summary</h2>
+    <p id="summary" class="card"></p>
 
-  <h2>Transactions</h2>
-  <div id="salesList"></div>
+    <h2>Best Sellers</h2>
+    <div id="bestSellers"></div>
+
+    <h2>Transactions</h2>
+    <div id="salesList"></div>
 
   <script>
     document.getElementById('reportDate').valueAsDate = new Date();

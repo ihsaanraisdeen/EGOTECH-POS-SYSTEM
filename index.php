@@ -9,14 +9,29 @@ if (!isset($_SESSION['user'])) {
 <html>
 <head>
   <title>POS - EGOTECHWORLD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>EGOTECHWORLD POS</h1>
-<p>Cashier: <?php echo $_SESSION['user']['name']; ?> | <a href="products.php">Manage Products</a> | <a href="reports.php">Reports</a>
-<?php if ($_SESSION['user']['role'] === 'admin') { ?>
- | <a href="users.php">Manage Users</a>
-<?php } ?>
- | <button onclick="logout()">Logout</button></p>  <input id="search" placeholder="Search product or scan barcode" autofocus>
+  <nav>
+    <strong>EGOTECHWORLD POS</strong>
+    <span><?php echo $_SESSION['user']['name']; ?></span>
+    <a href="products.php">Manage Products</a>
+    <a href="reports.php">Reports</a>
+    <?php if ($_SESSION['user']['role'] === 'admin') { ?>
+      <a href="users.php">Manage Users</a>
+    <?php } ?>
+    <button onclick="logout()" style="margin-left:auto;">Logout</button>
+  </nav>
+
+  <div class="container">
+    <h1>New Sale</h1>
+    <div id="lowStockAlert"></div>
+    <div class="card">
+      <input id="search" placeholder="Search product or scan barcode" autofocus style="width:100%;">
+      <div id="searchResults" style="margin-top:8px;"></div>
+    </div>
   <div id="searchResults"></div>
 
 <div id="lowStockAlert" style="background:#fff3cd; padding:10px; margin-bottom:10px;"></div>
@@ -36,8 +51,9 @@ if (!isset($_SESSION['user'])) {
   <button onclick="checkout()">Checkout</button>
   <p id="checkoutResult"></p>
 
-  <script>
-    let cart = [];
+  </div>
+
+  <script>    let cart = [];
     function loadLowStock() {
   fetch('api/low_stock.php')
     .then(res => res.json())

@@ -9,24 +9,35 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 <html>
 <head>
   <title>Users - EGOTECHWORLD POS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>User Management</h1>
-  <a href="index.php">Back to POS</a>
+  <nav>
+    <strong>EGOTECHWORLD POS</strong>
+    <a href="index.php">Back to POS</a>
+  </nav>
 
-  <h2>Add User</h2>
-  <input id="name" placeholder="Full name"><br><br>
-  <input id="username" placeholder="Username"><br><br>
-  <input id="password" type="password" placeholder="Password"><br><br>
-  <select id="role">
-    <option value="cashier">Cashier</option>
-    <option value="admin">Admin</option>
-  </select><br><br>
-  <button onclick="addUser()">Add User</button>
-  <p id="error" style="color:red;"></p>
+  <div class="container">
+    <h1>User Management</h1>
 
-  <h2>Users List</h2>
-  <div id="usersList"></div>
+    <h2>Add User</h2>
+    <div class="card">
+      <input id="name" placeholder="Full name">
+      <input id="username" placeholder="Username">
+      <input id="password" type="password" placeholder="Password">
+      <select id="role">
+        <option value="cashier">Cashier</option>
+        <option value="admin">Admin</option>
+      </select>
+      <br>
+      <button onclick="addUser()">Add User</button>
+      <p id="error" style="color:#c0392b;"></p>
+    </div>
+
+    <h2>Users List</h2>
+    <div id="usersList"></div>
 
   <script>
     function loadUsers() {

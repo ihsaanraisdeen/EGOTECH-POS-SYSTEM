@@ -27,20 +27,89 @@ if (!isset($_SESSION['user'])) {
   <div id="productList"></div>
 
   <script>
-    function loadProducts() {
-      fetch('api/products_get.php')
-        .then(res => res.json())
-        .then(products => {
-          document.getElementById('productList').innerHTML = products.map(p => `
+    let editingId = null;
+
+function loadProducts() {
+  fetch('api/products_get.php')
+    .then(res => res.json())
+    .then(products => {
+      document.getElementById('productList').innerHTML = products.map(p => {
+        if (editingId === p.id) {
+          return `
             <div>
-              <strong>${p.name}</strong> —
-              Price: Rs.${p.price} |
-              Stock: ${p.stock_qty} |
-              Barcode: ${p.barcode || '-'}
+              <input id="editName-${p.id}" value="${p.name}">
+              <input id="editPrice-${p.id}" type="number" step="0.01" value="${p.price}">
+              <input id="editCost-${p.id}" type="number" step="0.01" value="${p.cost_price}">
+              <input id="editStock-${p.id}" type="number" value="${p.stock_qty}">
+              <input id="editReorder-${p.id}" type="number" value="${p.reorder_level}">
+              <input id="editBarcode-${p.id}" value="${p.barcode || ''}">
+              <button onclick="saveEdit(${p.id})">Save</button>
+              <button onclick="cancelEdit()">Cancel</button>
             </div>
-          `).join('');
-        });
+          `;
+        }
+        return `
+          <div>
+            <strong>${p.name}</strong> —
+            Price: Rs.${p.price} | Stock: ${p.stock_qty} | Barcode: ${p.barcode || '-'}
+            <button onclick="startEdit(${p.id})">Edit</button>
+            <button onclick="deleteProduct(${p.id})">Delete</button>
+          </div>
+        `;
+      }).join('');
+    });
+}
+
+function startEdit(id) {
+  editingId = id;
+  loadProducts();
+}
+
+function cancelEdit() {
+  editingId = null;
+  loadProducts();
+}
+
+function saveEdit(id) {
+  const payload = {
+    id: id,
+    name: document.getElementById(`editName-${id}`).value,
+    price: document.getElementById(`editPrice-${id}`).value,
+    cost_price: document.getElementById(`editCost-${id}`).value,
+    stock_qty: document.getElementById(`editStock-${id}`).value,
+    reorder_level: document.getElementById(`editReorder-${id}`).value,
+    barcode: document.getElementById(`editBarcode-${id}`).value
+  };
+
+  fetch('api/products_update.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(() => {
+    editingId = null;
+    loadProducts();
+  });
+}
+
+function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+
+  fetch('api/products_delete.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.success) {
+      alert(data.error);
+      return;
     }
+    loadProducts();
+  });
+}
 
     function addProduct() {
       const payload = {

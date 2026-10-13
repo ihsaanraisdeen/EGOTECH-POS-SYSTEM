@@ -17,6 +17,7 @@ if (!isset($_SESSION['user'])) {
   <nav>
     <strong>EGOTECHWORLD POS</strong>
     <span><?php echo $_SESSION['user']['name']; ?></span>
+    <a href="dashboard.php">Dashboard</a>
     <a href="products.php">Manage Products</a>
     <a href="reports.php">Reports</a>
     <?php if ($_SESSION['user']['role'] === 'admin') { ?>
@@ -200,10 +201,13 @@ body: JSON.stringify({ cart, payment_method, paid_amount, discount_amount })})
       .then(res => res.json())
       .then(data => {
        if (data.success) {
-  document.getElementById('checkoutResult').innerHTML =
-    `Sale #${data.sale_id} completed! Total: Rs.${data.total} — <a href="receipt.php?sale_id=${data.sale_id}" target="_blank">View Receipt</a>`;
-  cart = [];
-  renderCart();
+  const changeText = data.change !== null ? ` | Change: Rs.${data.change.toFixed(2)}` : '';
+document.getElementById('checkoutResult').innerHTML =
+  `Sale #${data.sale_id} completed! Total: Rs.${data.total}${changeText} — <a href="receipt.php?sale_id=${data.sale_id}" target="_blank">View Receipt</a>`;
+cart = [];
+document.getElementById('paidAmount').value = '';
+document.getElementById('changeDisplay').textContent = '';
+renderCart();
 } else {
           alert('Error: ' + data.error);
         }

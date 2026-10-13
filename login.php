@@ -35,7 +35,7 @@
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          window.location.href = 'index.php';
+          window.location.href = 'dashboard.php';
         } else {
           document.getElementById('error').textContent = data.error;
         }

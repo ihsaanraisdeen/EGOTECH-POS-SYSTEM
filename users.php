@@ -17,6 +17,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
   <nav>
     <strong>EGOTECHWORLD POS</strong>
     <a href="index.php">Back to POS</a>
+    <a href="dashboard.php">Dashboard</a>
   </nav>
 
   <div class="container">

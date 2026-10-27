@@ -8,10 +8,21 @@ if (!isset($_SESSION['user'])) {
 }
 
 $q = $_GET['q'] ?? '';
-$stmt = $pdo->prepare("SELECT * FROM products WHERE name LIKE ? OR barcode = ? LIMIT 10");
-$stmt->execute(["%$q%", $q]);
-$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$category = $_GET['category_id'] ?? '';
+
+$sql = "SELECT * FROM products WHERE (name LIKE ? OR barcode = ?)";
+$params = ["%$q%", $q];
+
+if ($category !== '') {
+    $sql .= " AND category_id = ?";
+    $params[] = $category;
+}
+
+$sql .= " ORDER BY name LIMIT 20";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
 
 header('Content-Type: application/json');
-echo json_encode($products);
+echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 ?>

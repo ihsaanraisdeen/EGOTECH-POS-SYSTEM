@@ -215,3 +215,39 @@ footer strong {
 
 .stat-card.warn { border-top-color: #e0a800; }
 .stat-card.warn .stat-value { color: #b8860b; }
+
+.cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e6f5ef;
+  color: #0f3d3e;
+  border-radius: 20px;
+  padding: 4px 6px 4px 12px;
+  margin: 6px 6px 0 0;
+  font-size: 13px;
+}
+
+.cat-chip button {
+  padding: 2px 8px;
+  font-size: 12px;
+  border-radius: 50%;
+  background: #c0392b;
+}
+
+.filter-chip {
+  background: #e6f5ef;
+  color: #0f3d3e;
+  border-radius: 20px;
+  padding: 6px 14px;
+  margin: 0 6px 6px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.filter-chip:hover { background: #cdebe0; }
+
+.filter-chip.active {
+  background: #0f9d78;
+  color: #fff;
+}

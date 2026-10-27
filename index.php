@@ -29,7 +29,9 @@ if (!isset($_SESSION['user'])) {
   <div class="container">
     <h1>New Sale</h1>
     <div id="lowStockAlert"></div>
+
     <div class="card">
+      <div id="categoryFilter" style="margin-bottom:10px;"></div>
       <input id="search" placeholder="Search product or scan barcode" autofocus style="width:100%;">
       <div id="searchResults" style="margin-top:8px;"></div>
     </div>
@@ -41,36 +43,40 @@ if (!isset($_SESSION['user'])) {
       </thead>
       <tbody id="cartBody"></tbody>
     </table>
-<h3>Subtotal: Rs. <span id="cartSubtotal">0.00</span></h3>
 
-<div>
-<select id="discountType" onchange="renderCart()">
-      <option value="fixed">Rs. (fixed)</option>
-    <option value="percent">% (percentage)</option>
-  </select>
-  <input id="discountValue" type="number" step="0.01" placeholder="Discount" value="0" oninput="renderCart()" style="width:100px;">
-</div>
+    <h3>Subtotal: Rs. <span id="cartSubtotal">0.00</span></h3>
 
-<h3>Total: Rs. <span id="cartTotal">0.00</span></h3>
-   <select id="paymentMethod" onchange="togglePaidField()">
-  <option value="cash">Cash</option>
-  <option value="card">Card</option>
-</select>
+    <div>
+      <select id="discountType" onchange="renderCart()">
+        <option value="fixed">Rs. (fixed)</option>
+        <option value="percent">% (percentage)</option>
+      </select>
+      <input id="discountValue" type="number" step="0.01" placeholder="Discount" value="0" oninput="renderCart()" style="width:100px;">
+    </div>
 
-<span id="paidFieldWrapper">
-  <input id="paidAmount" type="number" step="0.01" placeholder="Amount received" oninput="calculateChange()">
-  <span id="changeDisplay" style="font-weight:600;"></span>
-</span>
+    <h3>Total: Rs. <span id="cartTotal">0.00</span></h3>
 
-<button onclick="checkout()">Checkout</button>
-<p id="checkoutResult"></p>
+    <select id="paymentMethod" onchange="togglePaidField()">
+      <option value="cash">Cash</option>
+      <option value="card">Card</option>
+    </select>
+
+    <span id="paidFieldWrapper">
+      <input id="paidAmount" type="number" step="0.01" placeholder="Amount received" oninput="calculateChange()">
+      <span id="changeDisplay" style="font-weight:600;"></span>
+    </span>
+
+    <button onclick="checkout()">Checkout</button>
+    <p id="checkoutResult"></p>
   </div>
 
   <footer>EGOTECHWORLD POS v1.0 &nbsp;|&nbsp; © 2026 <strong>EGOTECHWORLD (PVT) LTD</strong></footer>
 
   <script>
     let cart = [];
+    let selectedCategory = '';
 
+    // ---------- Low stock (auto-refresh every 5 seconds) ----------
     function loadLowStock() {
       fetch('api/low_stock.php')
         .then(res => res.json())
@@ -88,23 +94,51 @@ if (!isset($_SESSION['user'])) {
     loadLowStock();
     setInterval(loadLowStock, 5000);
 
-    document.getElementById('search').addEventListener('input', function() {
-      const q = this.value;
-      if (q.length < 1) {
-        document.getElementById('searchResults').innerHTML = '';
-        return;
-      }
-      fetch('api/products_search.php?q=' + encodeURIComponent(q))
+    // ---------- Category filter + search ----------
+    function loadCategoryFilter() {
+      fetch('api/categories_get.php')
         .then(res => res.json())
-        .then(products => {
-          document.getElementById('searchResults').innerHTML = products.map(p => `
-            <div onclick="addToCart(${p.id}, '${p.name}', ${p.price}, ${p.stock_qty})" style="cursor:pointer; border:1px solid #ccc; padding:5px;">
-              ${p.name} — Rs.${p.price} (Stock: ${p.stock_qty})
-            </div>
+        .then(cats => {
+          const allBtn = `<button class="filter-chip ${selectedCategory === '' ? 'active' : ''}" onclick="selectCategory('')">All</button>`;
+          document.getElementById('categoryFilter').innerHTML = allBtn + cats.map(c => `
+            <button class="filter-chip ${String(c.id) === String(selectedCategory) ? 'active' : ''}" onclick="selectCategory('${c.id}')">${c.name}</button>
           `).join('');
         });
-    });
+    }
 
+    function selectCategory(id) {
+      selectedCategory = id;
+      loadCategoryFilter();
+      runSearch();
+    }
+
+    function runSearch() {
+      const q = document.getElementById('search').value;
+      const results = document.getElementById('searchResults');
+
+      // Nothing typed and no category chosen: show nothing
+      if (q.length < 1 && selectedCategory === '') {
+        results.innerHTML = '';
+        return;
+      }
+
+      fetch('api/products_search.php?q=' + encodeURIComponent(q) + '&category_id=' + encodeURIComponent(selectedCategory))
+        .then(res => res.json())
+        .then(products => {
+          results.innerHTML = products.length
+            ? products.map(p => `
+                <div onclick="addToCart(${p.id}, '${p.name}', ${p.price}, ${p.stock_qty})" style="cursor:pointer; border:1px solid #ccc; padding:5px;">
+                  ${p.name} — Rs.${p.price} (Stock: ${p.stock_qty})
+                </div>
+              `).join('')
+            : '<div style="padding:5px; color:#8a8577;">No products found</div>';
+        });
+    }
+
+    document.getElementById('search').addEventListener('input', runSearch);
+    loadCategoryFilter();
+
+    // ---------- Cart ----------
     function addToCart(id, name, price, stock) {
       const existing = cart.find(item => item.product_id === id);
       if (existing) {
@@ -113,39 +147,39 @@ if (!isset($_SESSION['user'])) {
         cart.push({ product_id: id, name, unit_price: price, quantity: 1, stock });
       }
       document.getElementById('search').value = '';
-      document.getElementById('searchResults').innerHTML = '';
+      runSearch();
       renderCart();
     }
 
-   function getDiscountAmount(subtotal) {
-  const type = document.getElementById('discountType').value;
-  const value = parseFloat(document.getElementById('discountValue').value) || 0;
-  if (type === 'percent') {
-    return subtotal * (value / 100);
-  }
-  return value;
-}
+    function getDiscountAmount(subtotal) {
+      const type = document.getElementById('discountType').value;
+      const value = parseFloat(document.getElementById('discountValue').value) || 0;
+      if (type === 'percent') {
+        return subtotal * (value / 100);
+      }
+      return value;
+    }
 
-function renderCart() {
-  document.getElementById('cartBody').innerHTML = cart.map((item, i) => `
-    <tr>
-      <td>${item.name}</td>
-      <td><input type="number" value="${item.quantity}" min="1" onchange="updateQty(${i}, this.value)" style="width:70px;"></td>
-      <td>Rs.${item.unit_price}</td>
-      <td>Rs.${(item.unit_price * item.quantity).toFixed(2)}</td>
-      <td><button onclick="removeItem(${i})">X</button></td>
-    </tr>
-  `).join('');
+    function renderCart() {
+      document.getElementById('cartBody').innerHTML = cart.map((item, i) => `
+        <tr>
+          <td>${item.name}</td>
+          <td><input type="number" value="${item.quantity}" min="1" onchange="updateQty(${i}, this.value)" style="width:70px;"></td>
+          <td>Rs.${item.unit_price}</td>
+          <td>Rs.${(item.unit_price * item.quantity).toFixed(2)}</td>
+          <td><button onclick="removeItem(${i})">X</button></td>
+        </tr>
+      `).join('');
 
-  const subtotal = cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
-  const discount = getDiscountAmount(subtotal);
-  const total = Math.max(0, subtotal - discount);
+      const subtotal = cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+      const discount = getDiscountAmount(subtotal);
+      const total = Math.max(0, subtotal - discount);
 
-  document.getElementById('cartSubtotal').textContent = subtotal.toFixed(2);
-  document.getElementById('cartTotal').textContent = total.toFixed(2);
+      document.getElementById('cartSubtotal').textContent = subtotal.toFixed(2);
+      document.getElementById('cartTotal').textContent = total.toFixed(2);
 
-  calculateChange();
-}
+      calculateChange();
+    }
 
     function updateQty(index, qty) {
       cart[index].quantity = parseInt(qty);
@@ -156,59 +190,65 @@ function renderCart() {
       cart.splice(index, 1);
       renderCart();
     }
-function togglePaidField() {
-  const method = document.getElementById('paymentMethod').value;
-  document.getElementById('paidFieldWrapper').style.display = (method === 'cash') ? 'inline' : 'none';
-  document.getElementById('changeDisplay').textContent = '';
-}
 
-function calculateChange() {
-  const total = parseFloat(document.getElementById('cartTotal').textContent) || 0;
-  const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
-  const change = paid - total;
-
-  const el = document.getElementById('changeDisplay');
-  if (paid === 0) {
-    el.textContent = '';
-  } else if (change < 0) {
-    el.textContent = `Short by Rs.${Math.abs(change).toFixed(2)}`;
-    el.style.color = '#c0392b';
-  } else {
-    el.textContent = `Change: Rs.${change.toFixed(2)}`;
-    el.style.color = '#0f9d78';
-  }
-}
-    function checkout() {
-  if (cart.length === 0) return alert('Cart is empty');
-
-  const payment_method = document.getElementById('paymentMethod').value;
-  const total = parseFloat(document.getElementById('cartTotal').textContent) || 0;
-  let paid_amount = null;
-
-  if (payment_method === 'cash') {
-    paid_amount = parseFloat(document.getElementById('paidAmount').value) || 0;
-    if (paid_amount < total) {
-      return alert('Amount received is less than the total.');
+    // ---------- Payment ----------
+    function togglePaidField() {
+      const method = document.getElementById('paymentMethod').value;
+      document.getElementById('paidFieldWrapper').style.display = (method === 'cash') ? 'inline' : 'none';
+      document.getElementById('changeDisplay').textContent = '';
     }
-  }
-    const subtotal = parseFloat(document.getElementById('cartSubtotal').textContent) || 0;
-  const discount_amount = subtotal - total;
 
-     fetch('api/sale_create.php', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ cart, payment_method, paid_amount, discount_amount })})
+    function calculateChange() {
+      const total = parseFloat(document.getElementById('cartTotal').textContent) || 0;
+      const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
+      const change = paid - total;
+
+      const el = document.getElementById('changeDisplay');
+      if (paid === 0) {
+        el.textContent = '';
+      } else if (change < 0) {
+        el.textContent = `Short by Rs.${Math.abs(change).toFixed(2)}`;
+        el.style.color = '#c0392b';
+      } else {
+        el.textContent = `Change: Rs.${change.toFixed(2)}`;
+        el.style.color = '#0f9d78';
+      }
+    }
+
+    function checkout() {
+      if (cart.length === 0) return alert('Cart is empty');
+
+      const payment_method = document.getElementById('paymentMethod').value;
+      const total = parseFloat(document.getElementById('cartTotal').textContent) || 0;
+      let paid_amount = null;
+
+      if (payment_method === 'cash') {
+        paid_amount = parseFloat(document.getElementById('paidAmount').value) || 0;
+        if (paid_amount < total) {
+          return alert('Amount received is less than the total.');
+        }
+      }
+
+      const subtotal = parseFloat(document.getElementById('cartSubtotal').textContent) || 0;
+      const discount_amount = subtotal - total;
+
+      fetch('api/sale_create.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cart, payment_method, paid_amount, discount_amount })
+      })
       .then(res => res.json())
       .then(data => {
-       if (data.success) {
-  const changeText = data.change !== null ? ` | Change: Rs.${data.change.toFixed(2)}` : '';
-document.getElementById('checkoutResult').innerHTML =
-  `Sale #${data.sale_id} completed! Total: Rs.${data.total}${changeText} — <a href="receipt.php?sale_id=${data.sale_id}" target="_blank">View Receipt</a>`;
-cart = [];
-document.getElementById('paidAmount').value = '';
-document.getElementById('changeDisplay').textContent = '';
-renderCart();
-} else {
+        if (data.success) {
+          const changeText = data.change !== null ? ` | Change: Rs.${data.change.toFixed(2)}` : '';
+          document.getElementById('checkoutResult').innerHTML =
+            `Sale #${data.sale_id} completed! Total: Rs.${data.total}${changeText} — <a href="receipt.php?sale_id=${data.sale_id}" target="_blank">View Receipt</a>`;
+          cart = [];
+          document.getElementById('paidAmount').value = '';
+          document.getElementById('changeDisplay').textContent = '';
+          renderCart();
+          runSearch();
+        } else {
           alert('Error: ' + data.error);
         }
       });
@@ -218,7 +258,6 @@ renderCart();
       fetch('api/logout.php', { method: 'POST' })
         .then(() => window.location.href = 'login.php');
     }
-    
   </script>
 </body>
 </html>
